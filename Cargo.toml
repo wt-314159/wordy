@@ -1,0 +1,10 @@
+[package]
+name = "wordy"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.95"
+flate2 = "1.0.35"
+regex = "1.11.1"
+# fancy-regex = "0.14.0"
