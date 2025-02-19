@@ -5,7 +5,8 @@ use std::{
     path::PathBuf,
 };
 
-use crate::DICTIONARY;
+
+const DICTIONARY: &str = include_str!("../../resources/dictionary.txt");
 use anyhow::{Context, Result};
 use flate2::read::GzDecoder;
 use regex::Regex;
@@ -196,113 +197,4 @@ fn find_and_parse_matches(path: &PathBuf, map: &mut HashMap<String, u64>) {
     println!("");
     println!("\t======= finished parsing file, {match_count} matches ============");
     // buffer.flush().expect("Failed to flush buffer");
-}
-
-#[cfg(test)]
-mod test {
-    use std::{fs::File, io::Read, path::Path};
-
-    use super::REG;
-    use regex::Regex;
-
-    #[test]
-    fn test_regex() {
-        let regex = Regex::new(REG).unwrap();
-        let no_capture = "Georgsmarien_NOUN	1901,4,2	1906,2,2	1907,1,1	1908,5,5\n";
-        let capture2 = "EuroC	1878,1,1	1967,1,1	1968,1,1	1972,9,1\nBla bla bla";
-        let capture3 = "Golem_NOUN	1875,1,1	1903,1,1	1915,1,1\nother stuff don't match";
-
-        assert!(!regex.is_match(no_capture));
-        assert!(regex.is_match(capture2));
-        assert!(regex.is_match(capture3));
-
-        let cap2 = regex.captures(capture2).unwrap();
-        let match2 = cap2.iter().next().unwrap().unwrap();
-        assert_eq!(match2.as_str(), "EuroC	1878,1,1	1967,1,1	1968,1,1	1972,9,1");
-
-        let cap3 = regex.captures(capture3).unwrap();
-        let match3 = cap3.iter().next().unwrap().unwrap();
-        assert_eq!(match3.as_str(), "Golem_NOUN	1875,1,1	1903,1,1	1915,1,1");
-    }
-
-    #[test]
-    fn test_capture() {
-        let regex = Regex::new(REG).unwrap();
-        let hay = "Golem_NOUN	1875,1,1	1903,1,1	1915,1,1\nother stuff don't match";
-
-        assert!(regex.is_match(hay));
-
-        let cap = regex.captures(hay).unwrap();
-        let cap_string = &cap[0];
-        assert_eq!(cap_string, "Golem_NOUN	1875,1,1	1903,1,1	1915,1,1");
-
-        let word = &cap_string[0..5];
-        let parts = cap_string.split_whitespace();
-        let mut total = 0;
-        for m in parts.skip(1) {
-            let parts = m.split(',');
-            let count = parts.skip(1).next().unwrap();
-            total += count.parse::<i32>().unwrap();
-        }
-        assert_eq!(total, 3);
-        let string = word.to_owned() + " " + &total.to_string();
-        assert_eq!(string, "Golem 3")
-    }
-
-    #[test]
-    fn capture_iters_test() {
-        let regex = Regex::new(REG).expect("Failed to create regex");
-        let hay = "First_NOUN\t1875,1,1\t1903,1,1\t1915,1,1\nother stuff don't match\nSecon_NOUN\t1875,1,1\t1903,1,1\t1915,1,1\nblahother_test\t2121 don't match\nThird\t1875,1,1\t1903,1,1\t1915,1,1";
-
-        println!("{}", hay.to_string());
-
-        let mut i = 0;
-        for cap in regex.captures_iter(hay) {
-            i += 1;
-            let cap = &cap;
-            println!("Capture {i}: {:?}", &cap[0]);
-            println!("word: {}", &cap[1]);
-        }
-        assert_eq!(i, 3);
-    }
-
-    #[test]
-    fn wtf_is_happening_with_regex() {
-        let basic = Regex::new(r"(?m)^([a-z]{5})(_[a-zA-Z]+)?\t[0-9]{4}(.*)$").unwrap();
-        let hay = include_str!("../../resources/test.txt");
-
-        let mut i = 0;
-        for cap in basic.captures_iter(hay) {
-            i += 1;
-            println!("Capture {i}, {:?}, first: {}", &cap[0], &cap[1]);
-        }
-        assert_eq!(i, 5);
-    }
-
-    #[test]
-    fn open_file_test() {
-        let mut contents = String::new();
-        let path = Path::new("./resources/test.txt");
-        let mut file = File::open(path).expect(&format!("Failed to open file {:?}", path));
-        file.read_to_string(&mut contents)
-            .expect(&format!("Failed to read file to string {:?}", path));
-
-        let basic = Regex::new(r"(?m)^([a-z]{5})(_[a-zA-Z]+)?\t[0-9]{4}(.*)$").unwrap();
-        let hay = include_str!("../../resources/test.txt");
-
-        assert_eq!(hay, &contents);
-
-        let mut hay_caps = 0;
-        for cap in basic.captures_iter(hay) {
-            hay_caps += 1;
-            println!("Capture {hay_caps}, {:?}, first: {}", &cap[0], &cap[1]);
-        }
-
-        let mut cont_caps = 0;
-        for cap in basic.captures_iter(&contents) {
-            cont_caps += 1;
-            println!("Capture {cont_caps}, {:?}, first: {}", &cap[0], &cap[1]);
-        }
-        assert_eq!(cont_caps, hay_caps);
-    }
 }

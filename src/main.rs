@@ -1,11 +1,8 @@
-mod data;
-use data::initialisation;
-
-const DICTIONARY: &str = include_str!("../resources/dict.txt");
+const ANSWERS: &'static str = include_str!("../resources/answers.txt");
 
 fn main() {
+    for answer in ANSWERS.lines() {
+        wordy::Wordle::play(answer, wordy::algorithms::Naive::new(), 32);
+    }
 }
 
-trait Solver {
-    fn guess() -> String;
-}
