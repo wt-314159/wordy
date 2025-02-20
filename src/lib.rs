@@ -1,5 +1,5 @@
+use itertools::iproduct;
 pub mod algorithms;
-pub mod data;
 
 pub struct Wordle {}
 
@@ -38,6 +38,15 @@ pub enum Tiles {
 }
 
 impl Tiles {
+    fn permutations() -> impl Iterator<Item = [Self; 5]> {
+        iproduct!(
+            [Self::Green, Self::Grey, Self::Yellow],
+            [Self::Green, Self::Grey, Self::Yellow],
+            [Self::Green, Self::Grey, Self::Yellow],
+            [Self::Green, Self::Grey, Self::Yellow],
+            [Self::Green, Self::Grey, Self::Yellow]
+        ).map(|(a, b, c, d, e)| [a, b, c, d, e])
+    }
     fn compute(guess: &str, answer: &str) -> [Self; 5] {
         let mut used = [false; 5];
         let mut tiles = [Self::Grey; 5];

@@ -12,12 +12,12 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
-    let num_games = args.games.unwrap_or(100);
-    let mut scores = Vec::with_capacity(num_games);
+    let num_games = args.games.unwrap_or(usize::MAX);
+    let mut scores = Vec::new();
     let mut failed = 0;
     let mut over_6 = 0;
     for answer in ANSWERS.lines().take(num_games) {
-        if let Some(score) = wordy::Wordle::play(answer, wordy::algorithms::Naive::new(), 32) {
+        if let Some(score) = wordy::Wordle::play(answer, wordy::algorithms::Entropy::new(), 32) {
             println!("Guessed {} in {}", answer, score);
             scores.push(score);
             if score > 6 {

@@ -40,8 +40,7 @@ impl Solver for Naive {
             // last guess when computed against actual answer, keep candidate
             let last_guess = history.last().unwrap();
             self.remaining.retain(|(word, _)| {
-                let test_tiles = Tiles::compute(&last_guess.word, word);
-                test_tiles == last_guess.result
+                Tiles::compute(&last_guess.word, word) == last_guess.result
             });
             return self.remaining.first().unwrap().0.to_string();
         }
