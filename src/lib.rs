@@ -1,25 +1,27 @@
 pub mod algorithms;
 pub mod data;
 
-
-pub struct Wordle {
-    
-}
-
-
+pub struct Wordle {}
 
 impl Wordle {
     // play 6 rounds (or more), trying to guess the answer,
     // return the number of rounds it took to solve
-    pub fn play<S: Solver>(answer: &'static str, mut solver: S, max_rounds: usize) -> Option<usize> {
+    pub fn play<S: Solver>(
+        answer: &'static str,
+        mut solver: S,
+        max_rounds: usize,
+    ) -> Option<usize> {
         let mut history = Vec::new();
         for i in 1..=max_rounds {
             let guess = solver.guess(&history);
             if guess == answer {
                 return Some(i);
             }
-            let guess = Guess::new(guess);
-            history.push(guess);
+            let result = Tiles::compute(&guess, answer);
+            history.push(Guess {
+                word: guess,
+                result,
+            });
         }
         None
     }
@@ -32,7 +34,7 @@ pub enum Tiles {
     /// Misplaced
     Yellow,
     /// Wrong
-    Grey
+    Grey,
 }
 
 impl Tiles {
@@ -40,7 +42,7 @@ impl Tiles {
         let mut used = [false; 5];
         let mut tiles = [Self::Grey; 5];
 
-        // Find characters that match  
+        // Find characters that match
         for (i, (a, g)) in answer.chars().zip(guess.chars()).enumerate() {
             if a == g {
                 tiles[i] = Self::Green;
@@ -73,35 +75,49 @@ pub trait Solver {
     fn guess(&mut self, history: &[Guess]) -> String;
 }
 
+#[derive(Debug)]
 pub struct Guess {
     word: String,
-    result: [Tiles; 5]
-}
-
-impl Guess {
-    pub fn new(word: String) -> Guess {
-        // TODO! need to come up with a way of computing the tiles 
-        // resulting from a guess
-        Guess { word, result: [Tiles::Grey, Tiles::Grey, Tiles::Grey, Tiles::Grey, Tiles::Grey]}
-    }
+    result: [Tiles; 5],
 }
 
 #[cfg(test)]
 mod tests {
-    use super::Tiles; 
+    use super::Tiles;
 
     macro_rules! tiles {
-        (X) => { Tiles::Grey };
-        (Y) => { Tiles::Yellow };
-        (G) => { Tiles::Green };
+        (X) => {
+            Tiles::Grey
+        };
+        (Y) => {
+            Tiles::Yellow
+        };
+        (G) => {
+            Tiles::Green
+        };
         ($t1:tt $t2:tt $t3:tt $t4:tt $t5:tt) => {
-            [tiles!($t1), tiles!($t2), tiles!($t3), tiles!($t4), tiles!($t5)]
-        }
+            [
+                tiles!($t1),
+                tiles!($t2),
+                tiles!($t3),
+                tiles!($t4),
+                tiles!($t5),
+            ]
+        };
     }
 
     #[test]
     fn check_tiles_macro() {
-        assert_eq!(tiles![G Y X G G], [Tiles::Green, Tiles::Yellow, Tiles::Grey, Tiles::Green, Tiles::Green]);
+        assert_eq!(
+            tiles![G Y X G G],
+            [
+                Tiles::Green,
+                Tiles::Yellow,
+                Tiles::Grey,
+                Tiles::Green,
+                Tiles::Green
+            ]
+        );
     }
 
     #[test]
