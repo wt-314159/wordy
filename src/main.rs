@@ -4,17 +4,22 @@ fn main() {
     let num_games = 200;
     let mut scores = Vec::with_capacity(num_games);
     let mut failed = 0;
+    let mut over_6 = 0;
     for answer in ANSWERS.lines().take(num_games) {
         if let Some(score) = wordy::Wordle::play(answer, wordy::algorithms::Naive::new(), 32) {
             println!("Guessed {} in {}", answer, score);
             scores.push(score);
-        }
-        else {
+            if score > 6 {
+                over_6 += 1;
+            }
+        } else {
             println!("Failed to guess {}", answer);
             failed += 1;
         }
     }
     let average = scores.iter().sum::<usize>() as f64 / (num_games - failed) as f64;
-    println!("Average score: {:02}, Failed to solve: {}", average, failed);
+    println!(
+        "Average score: {:02}, Failed to solve: {}, Solved in more than 6 guesses: {}",
+        average, failed, over_6
+    );
 }
-
