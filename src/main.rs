@@ -1,7 +1,18 @@
+use clap::{Parser, ValueEnum};
+
 const ANSWERS: &'static str = include_str!("../resources/answers.txt");
 
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
+struct Args {
+    /// Number of games to play.
+    #[arg(short, long)]
+    games: Option<usize>,
+}
+
 fn main() {
-    let num_games = 200;
+    let args = Args::parse();
+    let num_games = args.games.unwrap_or(100);
     let mut scores = Vec::with_capacity(num_games);
     let mut failed = 0;
     let mut over_6 = 0;
