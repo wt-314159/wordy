@@ -90,6 +90,11 @@ pub struct Guess {
     result: [Tiles; 5],
 }
 
+struct Candidate {
+    word: &'static str,
+    score: f64,
+}
+
 #[cfg(test)]
 mod tests {
     use super::Tiles;

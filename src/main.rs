@@ -51,7 +51,7 @@ where
         }
         game_count +=1;
     }
-    let average = dbg!(scores.iter().sum::<usize>()) as f64 / dbg!((game_count - failed)) as f64;
+    let average = dbg!(scores.iter().sum::<usize>()) as f64 / dbg!(game_count - failed) as f64;
     println!(
         "Average score: {:.2}, Failed to solve: {}, Solved in more than 6 guesses: {}",
         average, failed, over_6

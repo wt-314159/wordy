@@ -1,4 +1,4 @@
-use crate::{Guess, Solver, Tiles};
+use crate::{Candidate, Guess, Solver, Tiles};
 
 const DICTIONARY: &'static str = include_str!("../../resources/dictionary.txt");
 
@@ -28,62 +28,49 @@ impl Entropy {
 
 impl Solver for Entropy {
     fn guess(&mut self, history: &[Guess]) -> String {
-        if history.is_empty() {
-            // Guess the most popular word, this is quite naive as this isn't likely
-            // to be the 'best' word, but just taking the easy route for now and
-            // looking to optimise later
-            return self.remaining.first().unwrap().0.to_string();
+        if let Some(last) = history.last() {
+            self.remaining.retain(|(w, _)| {
+                Tiles::compute(&last.word, w) == last.result
+            })
         }
-        // we need to work out the expected entroy, or given information,
-        // of a guess. We do this by multiplying the information of each
-        // possible outcome (given by -log2(p)) by the probability of that
-        // outcome (given by p, calculated by the number of words remaining
-        // given that outcome), and we sum this over every possible outcome
-        // N.B. this calculation of probability assumes every word is equally
-        // likely, this clearly isn't the case, but it's an ok starting point
-        let last_guess = history.last().unwrap();
-        self.remaining.retain(|(word, _)| {
-            Tiles::compute(&last_guess.word, word) == last_guess.result
-        });
+        else {
+            // Guess a known good first guess
+            return "tares".to_string();
+        }
 
         let num_remaining = self.remaining.len();
         // if num_remaining is small enough, say 10 words, go for the win
         if num_remaining < 10 {
-            println!("Going for the win!");
             return self.remaining.first().unwrap().0.to_string();
         }
         // instead of checking all words, only check the most likely
         let num_to_check = (num_remaining / 4).max(20);
-        let mut best_word = None;
-        let highest_score = 0.0;
+        let remaining_frequency: u32 = self.remaining.iter().map(|(_, c)| *c).take(num_to_check).sum();
+        let mut best:Option<Candidate> = None; 
         for (word, _) in self.remaining.iter().take(num_to_check) {
             let mut sum = 0.0;
+            let mut pattern_frequency = 0;
             for pattern in Tiles::permutations() {
-                let mut matching_words = 0;
-                for (pos_word, _) in &self.remaining {
-                    if Tiles::compute(word, pos_word) == pattern {
-                        matching_words += 1;
+                for (candidate, count) in &self.remaining {
+                    if Tiles::compute(word, candidate) == pattern {
+                        pattern_frequency += count;
                     }
                 }
-                if matching_words == 0 {
-                    continue;
-                }
-
-                let probability = matching_words as f64 / num_remaining as f64;
+                
+                let probability = pattern_frequency as f64 / remaining_frequency as f64;
                 sum += probability * probability.log2();
             }
 
-            let expected_info = -sum;
-            if expected_info > highest_score {
-                best_word = Some(word);
-                println!("\tBest word is {}, with score {}", word, expected_info);
+            let sum = -sum;
+            if let Some(b) = &best {
+                if sum > b.score {
+                    best = Some(Candidate { word, score: sum});
+                }
             }
         }
-        if let Some(word) = best_word {
-            println!("\tChoosing {}, score {}", word, highest_score);
-            return word.to_string();
+        if let Some(b) = best {
+            return b.word.to_string();
         }
-        eprintln!("No best word found! going with first");
         self.remaining.first().expect("No remaining left!").0.to_owned()
     }
 }
