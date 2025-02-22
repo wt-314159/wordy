@@ -82,8 +82,8 @@ impl Tiles {
 
     pub fn matches(guess: &str, answer: &str, pattern: &[Self; 5]) -> bool {
         let mut used = [false; 5];
-        for i in 0..5 {
-            if guess[i..i+1] == answer[i..i+1] {
+        for (i, (g, a)) in guess.chars().zip(answer.chars()).enumerate() {
+            if g == a {
                 // If the ith character of guess and answer match,
                 // but the ith tile in the pattern isn't green, 
                 // return false

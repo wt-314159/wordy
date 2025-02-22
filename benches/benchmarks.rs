@@ -42,5 +42,39 @@ fn match_vs_compute(c: &mut Criterion) {
     |b, (g, a, r)| b.iter(|| Tiles::matches(g, a, r)));
 }
 
-criterion_group!(benches, match_vs_compute);
+fn zip_vs_for_slice(c: &mut Criterion) {
+    let mut group = c.benchmark_group("zip vs for slice");
+
+    group.bench_with_input(
+        "zip",
+        &("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz",
+        "abcdefgjijklmnoplrstuvwxydabcdefghijklmnopqrstuvwnyzabcdefghijklmnopqrstuvwxyzabcdegghijklmnopqrstuvwxyz"),
+        |b, (a, c)| b.iter(|| {
+            let mut count = black_box(0);
+            for (i, (x, y)) in a.chars().zip(c.chars()).enumerate() {
+                if x == y {
+                    count += black_box(i);
+                }
+            }
+            black_box(count);
+        })
+    );
+
+    group.bench_with_input(
+        "for_slice",
+        &("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz",
+        "abcdefgjijklmnoplrstuvwxydabcdefghijklmnopqrstuvwnyzabcdefghijklmnopqrstuvwxyzabcdegghijklmnopqrstuvwxyz"),
+        |b, (a, c)| b.iter(|| {
+            let mut count = black_box(0);
+            for i in 0..104 {
+                if a[i..i+1] == c[i..i+1] {
+                    count += black_box(i);
+                }
+            }
+            black_box(count);
+        })
+    );
+}
+
+criterion_group!(benches, zip_vs_for_slice);
 criterion_main!(benches);
