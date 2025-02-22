@@ -52,7 +52,7 @@ impl Solver for Entropy {
             let mut pattern_frequency = 0;
             for pattern in Tiles::permutations() {
                 for (candidate, count) in &self.remaining {
-                    if Tiles::compute(word, candidate) == pattern {
+                    if Tiles::matches(word, candidate, &pattern) {
                         pattern_frequency += count;
                     }
                 }
