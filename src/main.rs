@@ -10,7 +10,7 @@ struct Args {
     games: Option<usize>,
 
     #[arg(value_enum)]
-    algorithm: Algorithm
+    algorithm: Option<Algorithm>
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, ValueEnum)]
@@ -24,9 +24,10 @@ enum Algorithm {
 fn main() {
     let args = Args::parse();
     let num_games = args.games.unwrap_or(usize::MAX);
-    match dbg!(args.algorithm) {
-        Algorithm::Entropy => play(wordy::algorithms::Entropy::new, num_games),
-        Algorithm::Naive => play(wordy::algorithms::Naive::new, num_games)
+    match args.algorithm {
+        Some(Algorithm::Entropy) => play(wordy::algorithms::Entropy::new, num_games),
+        Some(Algorithm::Naive) => play(wordy::algorithms::Naive::new, num_games),
+        None => play(wordy::algorithms::Entropy::new, num_games),
     }
 }
 

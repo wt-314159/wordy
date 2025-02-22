@@ -3,7 +3,7 @@ use crate::{Candidate, Guess, Solver, Tiles};
 const DICTIONARY: &'static str = include_str!("../../resources/dictionary.txt");
 
 pub struct Entropy {
-    remaining: Vec<(&'static str, u32)>,
+    remaining: Vec<(&'static str, u64)>,
 }
 
 impl Entropy {
@@ -16,7 +16,7 @@ impl Entropy {
                 .next()
                 .expect(&format!("Word without frequency: {line}"));
             let freq = freq
-                .parse::<u32>()
+                .parse::<u64>()
                 .expect(&format!("Failed to parse frequency {freq}"));
             remaining.push((word, freq));
         }
@@ -45,7 +45,7 @@ impl Solver for Entropy {
         }
         // instead of checking all words, only check the most likely
         let num_to_check = (num_remaining / 4).max(20);
-        let remaining_frequency: u32 = self.remaining.iter().map(|(_, c)| *c).take(num_to_check).sum();
+        let remaining_frequency: u64 = self.remaining.iter().map(|(_, c)| *c).take(num_to_check).sum();
         let mut best:Option<Candidate> = None; 
         for (word, _) in self.remaining.iter().take(num_to_check) {
             let mut sum = 0.0;
