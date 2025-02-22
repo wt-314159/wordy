@@ -38,7 +38,7 @@ pub enum Tiles {
 }
 
 impl Tiles {
-    fn permutations() -> impl Iterator<Item = [Self; 5]> {
+    pub fn permutations() -> impl Iterator<Item = [Self; 5]> {
         iproduct!(
             [Self::Green, Self::Grey, Self::Yellow],
             [Self::Green, Self::Grey, Self::Yellow],
@@ -47,7 +47,8 @@ impl Tiles {
             [Self::Green, Self::Grey, Self::Yellow]
         ).map(|(a, b, c, d, e)| [a, b, c, d, e])
     }
-    fn compute(guess: &str, answer: &str) -> [Self; 5] {
+
+    pub fn compute(guess: &str, answer: &str) -> [Self; 5] {
         let mut used = [false; 5];
         let mut tiles = [Self::Grey; 5];
 
@@ -77,6 +78,54 @@ impl Tiles {
         }
 
         tiles
+    }
+
+    pub fn matches(guess: &str, answer: &str, pattern: &[Self; 5]) -> bool {
+        let mut used = [false; 5];
+        for i in 0..5 {
+            if guess[i..i+1] == answer[i..i+1] {
+                // If the ith character of guess and answer match,
+                // but the ith tile in the pattern isn't green, 
+                // return false
+                if pattern[i] != Self::Green {
+                    return false;
+                }
+                used[i] = true;
+            }
+            // or if they don't match, but the ith tile is green,
+            // also return false
+            else if pattern[i] == Self::Green {
+                return false;
+            }
+        }
+        for (i, g) in guess.chars().enumerate() {
+            // already accounted for
+            if pattern[i] == Self::Green {
+                continue;
+            }
+            let mut misplaced = false;
+            for (j, a) in answer.chars().enumerate() {
+                if used[j] {
+                    continue;
+                }
+                if a == g {
+                    // if a character from guess is contained in the answer, but 
+                    // the pattern we're comparing to says it isn't, return false
+                    if pattern[i] != Self::Yellow {
+                        return false;
+                    }
+                    used[j] = true;
+                    misplaced = true;
+                    break;
+                }
+            }
+            // If the character from guess didn't match any from the answer,
+            // but the pattern says it should have, also return false
+            if !misplaced && pattern[i] == Self::Yellow {
+                return false;
+            }
+        }
+        true
     }
 }
 
@@ -137,25 +186,44 @@ mod tests {
     #[test]
     fn all_green() {
         assert_eq!(Tiles::compute("abcde", "abcde"), tiles![G G G G G]);
+        assert!(Tiles::matches("abcde", "abcde", &tiles![G G G G G]));
+        assert!(!Tiles::matches("abcde", "abcde", &tiles![X X X X X]));
+        assert!(!Tiles::matches("abcde", "abcde", &tiles![G G G G Y]));
     }
 
     #[test]
     fn all_grey() {
         assert_eq!(Tiles::compute("abcde", "fghij"), tiles![X X X X X]);
+        assert!(Tiles::matches("abcde", "fghij", &tiles![X X X X X]));
+        assert!(!Tiles::matches("abcde", "fghij", &tiles![G G G G G]));
     }
 
     #[test]
     fn all_yellow() {
         assert_eq!(Tiles::compute("abcde", "eabcd"), tiles![Y Y Y Y Y]);
+        assert!(Tiles::matches("abcde", "eabcd", &tiles![Y Y Y Y Y]));
+        assert!(!Tiles::matches("abcde", "eabcd", &tiles![G G G G G]));
+        assert!(!Tiles::matches("abcde", "eabcd", &tiles![X X X X X]));
+        assert!(!Tiles::matches("abcde", "eabcd", &tiles![Y Y Y G Y]));
     }
 
     #[test]
     fn one_wrong() {
         assert_eq!(Tiles::compute("ababa", "babab"), tiles![Y Y Y Y X]);
+        assert!(Tiles::matches("ababa", "babab", &tiles![Y Y Y Y X]));
+        assert!(!Tiles::matches("ababa", "babab", &tiles![Y Y X Y X]));
+        assert!(!Tiles::matches("ababa", "babab", &tiles![Y Y G Y X]));
+        assert!(!Tiles::matches("ababa", "babab", &tiles![Y G Y Y X]));
+        assert!(!Tiles::matches("ababa", "babab", &tiles![Y Y Y Y Y]));
     }
 
     #[test]
     fn typical_case() {
         assert_eq!(Tiles::compute("hello", "world"), tiles![X X X G Y]);
+        assert!(Tiles::matches("hello", "world", &tiles![X X X G Y]));
+        assert!(!Tiles::matches("hello", "world", &tiles![X X X X Y]));
+        assert!(!Tiles::matches("hello", "world", &tiles![X X X Y Y]));
+        assert!(!Tiles::matches("hello", "world", &tiles![X X Y G Y]));
+        assert!(!Tiles::matches("hello", "world", &tiles![X G X G Y]));
     }
 }

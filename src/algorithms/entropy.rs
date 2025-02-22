@@ -57,6 +57,9 @@ impl Solver for Entropy {
                     }
                 }
                 
+                if pattern_frequency == 0 {
+                    continue;
+                }
                 let probability = pattern_frequency as f64 / remaining_frequency as f64;
                 sum += probability * probability.log2();
             }
