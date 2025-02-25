@@ -23,6 +23,7 @@ macro_rules! tiles {
     };
 }
 
+#[allow(dead_code)]
 fn match_vs_compute(c: &mut Criterion) {
     let mut group = c.benchmark_group("match vs compute");
 
